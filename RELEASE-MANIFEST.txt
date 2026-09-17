@@ -1,0 +1,15 @@
+NIRIKSHAN 16 — HACKATHON DEPLOY RELEASE
+
+Primary deployment: Dockerfile
+Runtime: Node.js 22 + Express 5
+Frontend: React/Vite, served by the API service after build
+Data: supplied MPLADS registers + embedded work index
+Persistence: JSON file under NIRIKSHAN_DATA_DIR (persistent volume required)
+Health: GET /api/health
+
+Required production variables:
+NODE_ENV=production
+JWT_SECRET=<32+ chars>
+NIRIKSHAN_USERS_JSON=<JSON user array>
+CORS_ORIGIN=<exact public origin>
+NIRIKSHAN_DATA_DIR=/app/runtime

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Nirikshan Project Intelligence"
+description = "An AI-assisted MPLADS project intelligence dashboard that surfaces explainable anomalies, prioritizes human verification, and helps officials monitor project risk across India."
+version = "1.0.0"
+id = "artifacts/nirikshan"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19300
+
+[services.development]
+run = "pnpm --filter @workspace/nirikshan run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nirikshan", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/nirikshan/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19300"
+BASE_PATH = "/"
