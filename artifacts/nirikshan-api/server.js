@@ -572,14 +572,23 @@ app.get('/api/mp-register', (req, res) => {
     mps: rows.slice(start, start + pageSize).map(p => ({ id:p.id, name:p.name, constituency:p.location, state:p.state, house:p.house, allocatedAmount:p.sanctionedCost, recommendedAmount:p.recommendedAmount, expenditure:p.currentExpenditure, recommendedWorks:p.recommendedWorks, completedWorks:p.completedWorks, completionRate:p.completionRatePct, transactionCount:p.transactionCount, successfulPayments:p.successfulPayments, pendingPayments:p.pendingPayments, balanceNotYetPaidToVendors:p.balanceNotYetPaidToVendors, averageRating:p.averageRating, responsibleAuthority:p.responsibleAuthority, dataSource:p.dataSource }))
   });
 });
-
+let projectRegisterOptionsCache = null;
 app.get('/api/project-register/options', (req, res) => {
-  const rows = filteredWorkRows(req);
+  const hasFilters = ['query','state','district','area','category','status','house']
+    .some(key => String(req.query?.[key] || '').trim());
+
+  if (!hasFilters && projectRegisterOptionsCache) {
+  return res.json(projectRegisterOptionsCache);
+}
+
+const rows = hasFilters ? filteredWorkRows(req) : projectIndexRows;
   const districts = [...new Set(rows.map(r => r[14]).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   const areasCount = new Map();
   for (const row of rows) { const area = String(row[15] || '').trim(); if (area) areasCount.set(area, (areasCount.get(area) || 0) + 1); }
   const areas = [...areasCount.entries()].sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0])).slice(0,250).map(([name,count])=>({name,count}));
-  res.json({ states: realStates, districts, categories: realCategories, houses:['Lok Sabha','Rajya Sabha'], statuses:['Recommended','Completed'], areas, total: rows.length, source: projectRegisterMeta.source });
+  const result = { states: realStates, districts, categories: realCategories, houses:['Lok Sabha','Rajya Sabha'], statuses:['Recommended','Completed'], areas, total: rows.length, source: projectRegisterMeta.source };
+if (!hasFilters) projectRegisterOptionsCache = result;
+res.json(result);
 });
 
 app.get('/api/project-register', (req, res) => {
