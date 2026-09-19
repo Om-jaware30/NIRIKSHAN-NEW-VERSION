@@ -531,22 +531,43 @@ function buildComparison(project) {
   else if (physicalGap >= 8) assessment = 'Physical completion is above the selected state peer range.';
   return { projectId: project.id, projectType: project.type, current: { physicalProgress: physical, financialProgress: financial }, comparables: records, averageComparable: { physicalProgress: avgPhysical, financialProgress: avgFinancial }, variance: { physicalGap, financialGap }, assessment, recommendation: 'Use the comparison as a review prompt and validate the underlying register records before making a consequential decision.', sampleLabel: 'Derived from supplied MPLADS register' };
 }
-
 function buildSatelliteObservation(project) {
+  const seed = [...String(project.id || project.name || 'satellite')]
+    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+
+  const previousActivity = 42 + (seed % 16);
+  const activityChange = 14 + (seed % 13);
+  const latestActivity = Math.min(92, previousActivity + activityChange);
+  const observedProgress = Math.min(96, Math.max(18, latestActivity - 4));
+  const physicalProgress = Number(project.completionRatePct ?? project.physicalProgress ?? 0);
+
+  const gap = Math.abs(observedProgress - physicalProgress);
+  const consistency = gap > 12 ? 'Review suggested' : 'Consistent';
+
   return {
     projectId: project.id,
     projectName: project.name,
     projectArea: `${project.location}, ${project.state}`,
-    available: false,
-    previousObservationDate: '',
-    latestObservationDate: '',
-    previousActivity: 0,
-    latestActivity: 0,
-    activityChange: 0,
-    observedProgress: 0,
-    consistency: 'Not available',
-    observation: 'No satellite or remote-sensing observation is present in the supplied MPLADS register. NIRIKSHAN does not fabricate an observation.',
-    sampleLabel: 'Remote observation not supplied',
+    available: true,
+
+    previousObservationDate: '2026-05-18',
+    latestObservationDate: '2026-08-22',
+
+    previousActivity,
+    latestActivity,
+    activityChange,
+    observedProgress,
+    consistency,
+
+    observation:
+      consistency === 'Review suggested'
+        ? `Remote observation indicates increased site activity, but the estimated progress differs from the reported ${physicalProgress}% physical progress. A field verification is recommended.`
+        : `Remote observation indicates site activity consistent with the reported ${physicalProgress}% physical progress.`,
+
+    sampleLabel: 'Simulated satellite observation · prototype demo',
+
+    demoNotice:
+      'Simulated remote-observation data for demonstration. This is not a live satellite feed.'
   };
 }
 
